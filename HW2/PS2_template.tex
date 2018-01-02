@@ -1,0 +1,191 @@
+\documentclass[a4paper,UTF8]{article}
+\usepackage{ctex}
+\usepackage[margin=1.25in]{geometry}
+\usepackage{color}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{bm}
+\usepackage{hyperref}
+\numberwithin{equation}{section}
+%\usepackage[thmmarks, amsmath, thref]{ntheorem}
+\theoremstyle{definition}
+\newtheorem*{solution}{Solution}
+\newtheorem*{prove}{Proof}
+\usepackage{multirow}
+
+%--
+
+%--
+\begin{document}
+\title{习题二}
+\author{141220120, 徐世坚, xsj13260906215@gmail.com}
+\maketitle
+\section{[10pts] Lagrange Multiplier Methods}
+请通过拉格朗日乘子法(可参见教材附录B.1)证明《机器学习》教材中式(3.36)与式(3.37)等价。即下面公式\eqref{primal}与\eqref{dual}等价。
+\begin{equation}
+\label{primal}
+\begin{split}
+ \min_{\mathbf{w}} \quad &-\mathbf{w}^\mathrm{T} \mathbf{S}_b\mathbf{w}\\ 
+\text{s.t.} \quad &\mathbf{w}^\mathrm{T} \mathbf{S}_w\mathbf{w} = 1
+\end{split}
+\end{equation}
+
+\begin{equation}
+\label{dual}
+\mathbf{S}_b\mathbf{w} = \lambda \mathbf{S}_w\mathbf{w}
+\end{equation}
+\begin{prove}
+此处用于写证明(中英文均可)\\
+建立拉格朗日函数如下：\\
+$F(w,\lambda)=-w^T S_b w+\lambda (w^T S_w w-1)$\\
+$\because S_b$ 和 $ S_w $都是对称阵\\
+$\therefore F^{'}_w = -2 S_b w + 2 \lambda S_w w = 0 $\\
+$\therefore S_b w = \lambda S_w w$
+
+\qed
+\end{prove}
+
+\section{[20pts] Multi-Class Logistic Regression}
+教材的章节3.3介绍了对数几率回归解决二分类问题的具体做法。假定现在的任务不再是二分类问题，而是多分类问题，其中$y\in\{1,2\dots,K\}$。请将对数几率回归算法拓展到该多分类问题。
+
+(1) \textbf{[10pts]} 给出该对率回归模型的“对数似然”(log-likelihood);
+
+(2) \textbf{[10pts]} 计算出该“对数似然”的梯度。
+
+提示1：假设该多分类问题满足如下$K-1$个对数几率，
+\begin{eqnarray*}
+\ln\frac{p(y=1|\mathbf{x})}{p(y=K|\mathbf{x})}&=&\mathbf{w}_1^\mathrm{T}\mathbf{x}+b_1\\
+\ln\frac{p(y=2|\mathbf{x})}{p(y=K|\mathbf{x})}&=&\mathbf{w}_2^\mathrm{T}\mathbf{x}+b_2\\
+&\dots&\\
+\ln\frac{p(y={K-1}|\mathbf{x})}{p(y=K|\mathbf{x})}&=&\mathbf{w}_{K-1}^\mathrm{T}\mathbf{x}+b_{K-1}
+\end{eqnarray*}
+
+提示2：定义指示函数$\mathbb{I}(\cdot)$，
+$$\mathbb{I}(y=j)=
+\begin{cases}
+1& \text{若$y$等于$j$}\\
+0& \text{若$y$不等于$j$}
+\end{cases}$$
+
+\begin{solution}
+此处用于写解答(中英文均可)\\
+$\because \ln\frac{p(y=i|\mathbf x)}{p(y=K|\mathbf x)}=\mathbf w^T_i \mathbf x + b_i$，$i=1,...,K-1$\\
+$\therefore p(y=i|\mathbf x)=p(y=K|\mathbf x) e^{\mathbf w^T_i \mathbf x + b_i}$，$i=1,...,K-1$\\
+$\therefore 1=\sum_{i=1}^{K}p(y=i|\mathbf x) = p(y=K|\mathbf x)(\sum_{i=1}^{K-1} e^{\mathbf w^T_i \mathbf x + b_i} + 1)$\\
+$\therefore p(y=K|\mathbf x) = \frac{1}{\sum_{l=1}^{K-1} e^{\mathbf w^T_l \mathbf x + b_l} + 1}$\\
+$\therefore p(y=i|\mathbf x) = \frac{e^{\mathbf w^T_i \mathbf x + b_i}}{\sum_{l=1}^{K-1} e^{\mathbf w^T_l \mathbf x + b_l} + 1}$，$i=1...K-1$\\
+令$\beta_i = (\mathbf w_i;b_i)$，$\hat{\mathbf x}=(\mathbf x;1)$，则$\mathbf w_i^T \mathbf x + b_i = {\beta_i}^T\hat{\mathbf x}$\\
+再令$p_i(\hat{\mathbf x};\beta_i)=p(y=i|\hat{\mathbf x};\beta_i)$，设样本数为m\\
+$\therefore p(\hat{\mathbf x})=\prod_{i=1}^{K} p_i(\hat{\mathbf x};\beta_i)^{\mathbb{I}(y=i)}$\\
+$\therefore L(\beta)=\prod_{j=1}^{m}\prod_{i=1}^{K} p_i(\hat{\mathbf x_j};\beta_i)^{\mathbb{I}(y_j=i)}$\\
+$\therefore \ln{L(\beta)} = \sum_{j=1}^m \sum_{i=1}^{K} \mathbb{I}(y_j=i) \ln{p_i(\hat{\mathbf x_j}; \beta_i)}$\\
+即$\ln{L(\beta)} = \sum_{j=1}^m \sum_{i=1}^{K} \mathbb{I}(y_j=i) \ln{p(y_j=i|\hat{\mathbf x_j};\beta_i)}$\\
+下面求对数似然函数的梯度:\\
+$\ln{L(\beta)} = \sum_{j=1}^m \sum_{i=1}^{K} \mathbb{I}(y_j=i) \ln{p(y_j=i|\hat{\mathbf x_j};\beta_i)}$\\
+$=\sum_{j=1}^m (\sum_{i=1}^{K-1}\mathbb{I}(y_j=i) [\beta^T_i \hat{\mathbf x_j} - \ln(\sum_{l=1}^{K-1}e^{\beta^T_l \hat{\mathbf x_j}} + 1)] + \mathbb{I}(y_j=K)[0-\ln(\sum_{l=1}^{K-1} e^{\beta^T_l \hat{\mathbf x_j}} + 1)])$\\
+$=\sum_{j=1}^m (\sum_{i=1}^{K-1}\mathbb{I}(y_j=i)\beta^T_i \hat{\mathbf x_j} - \sum_{i=1}^{K}\mathbb{I}(y_j=i)\ln(\sum_{l=1}^{K-1} e^{\beta^T_l \hat{\mathbf x_j}} + 1))$\\
+$\therefore \frac{\partial \ln{L(\beta)}}{\partial \beta_k} = \sum_{j=1}^m (\mathbb{I}(y_j=k)\hat{\mathbf x_j} - \sum_{i=1}^K\mathbb{I}(y_j=i)\frac{\hat{\mathbf x_j}e^{\beta_k^T \hat{\mathbf x_j}}}{\sum_{l=1}^{K-1} e^{\beta^T_l \hat{\mathbf x_j}} + 1}  )$ \\
+$ = \sum_{j=1}^m (\mathbb{I}(y_j=k) - \sum_{i=1}^K\mathbb{I}(y_j=i)\frac{e^{\beta_k^T \hat{\mathbf x_j}}}{\sum_{l=1}^{K-1} e^{\beta^T_l \hat{\mathbf x_j}} + 1})\hat{\mathbf x_j}$\\
+$ = \sum_{j=1}^m (\mathbb{I}(y_j=k) - p(y_j=k|\hat{\mathbf x_j};\beta_k))\hat{\mathbf x_j} $
+\end{solution}
+
+\section{[35pts] Logistic Regression in Practice} 
+对数几率回归(Logistic Regression, 简称LR)是实际应用中非常常用的分类学习算法。
+
+(1) \textbf{[30pts]} 请编程实现二分类的LR, 要求采用牛顿法进行优化求解, 其更新公式可参考《机器学习》教材公式(3.29)。详细编程题指南请参见链接：\url{http://lamda.nju.edu.cn/ml2017/PS2/ML2_programming.html}
+
+(2) \textbf{[5pts]} 请简要谈谈你对本次编程实践的感想(如过程中遇到哪些障碍以及如何解决, 对编程实践作业的建议与意见等)。
+\begin{solution}
+此处用于写解答(中英文均可)\\
+(1)用Python编写的main.py，实现了二分类的LR，自测精度达到95\%以上\\
+(2)实验中最大的问题是参数十分敏感。我在一开始测试时，设置$\beta$全为0，精度很好；后来，我将$\beta$初始值设为全1，结果精度立马大幅下降，只剩60\%。这个不经意的改动让我调了很久。我个人的理解是，当$\beta$初值为0时，模型正好对应的是一个随机的分类器，然后学得的$\beta$就是对原来的随机分类器的改进。如果一开始的$\beta$不等于0，则该模型的初始状态就是有偏的，除非迭代次数足够多，否则这个偏离难以被纠正回来。\\
+另一方面，因为涉及很多的迭代计算，存在数值不稳定的情况，例如矩阵奇异，如果某次产生了奇异矩阵，那我会跳过当前循环，继续迭代，在后面把奇异矩阵消除。\\
+具体编程实现时，还参考了一些\href{https://github.com/deerishi/Logistic-Regression-Convergence-Analysis/blob/master/logistic2.py}{网上的资料}。
+\end{solution}
+
+
+\section{[35pts] Linear Regression with Regularization Term}
+
+给定数据集$D = \{(\mathbf{x}_1,y_1),(\mathbf{x}_2,y_2),\cdots,(\mathbf{x}_m,y_m)\}$, 其中$\mathbf{x}_i = (x_{i1};x_{i2};\cdots;x_{id}) \in \mathbb{R}^d$, $y_i \in \mathbb{R}$, 当我们采用线性回归模型求解时, 实际上是在求解下述优化问题：
+\begin{equation}
+\label{eq:ls}
+\hat{\mathbf{w}}_{\textbf{LS}}^* = \mathop{\arg\min}_{\mathbf{w}} \frac{1}{2}\lVert \mathbf{y} - \mathbf {X}\mathbf{w} \rVert_2^2,
+\end{equation}
+其中, $\mathbf{y} = [y_1,\cdots,y_m]^\mathrm{T} \in \mathbb{R}^m, \mathbf{X} = [\mathbf{x}_1^\mathrm{T};\mathbf{x}_2^\mathrm{T};\cdots;\mathbf{x}_m^\mathrm{T}]\in \mathbb{R}^{m\times d}$, 下面的问题中, 为简化求解过程, 我们暂不考虑线性回归中的截距(intercept)。
+
+在实际问题中, 我们常常不会直接利用线性回归对数据进行拟合, 这是因为当样本特征很多, 而样本数相对较少时, 直接线性回归很容易陷入过拟合。为缓解过拟合问题, 常对公式\eqref{eq:ls}引入正则化项, 通常形式如下：
+
+\begin{equation}
+\label{eq:ls-regular}
+\hat{\mathbf{w}}_{\textbf{reg}}^* = \mathop{\arg\min}_{\mathbf{w}} \frac{1}{2}\lVert \mathbf{y} - \mathbf X \mathbf{w} \rVert_2^2 +\lambda \Omega(\mathbf{w}),
+\end{equation}
+其中, $\lambda> 0$为正则化参数, $\Omega(\mathbf{w})$是正则化项, 根据模型偏好选择不同的$\Omega$。
+
+下面, 假设样本特征矩阵$\mathbf{X}$满足列正交性质, 即$\mathbf{X}^\mathrm{T}\mathbf{X} = \mathbf{I}$, 其中$\mathbf{I}\in \mathbb{R}^{d\times d}$是单位矩阵, 请回答下面的问题(需要给出详细的求解过程)：
+
+(1) \textbf{[5pts]} 考虑线性回归问题, 即对应于公式\eqref{eq:ls}, 请给出最优解$\hat{\mathbf{w}}_{\textbf{LS}}^*$的闭式解表达式;
+
+(2) \textbf{[10pts]} 考虑\href{https://en.wikipedia.org/wiki/Tikhonov_regularization}{岭回归(ridge regression)}问题, 即对应于公式\eqref{eq:ls-regular}中$\Omega(\mathbf{w}) = \lVert \mathbf{w}\rVert_2^2=\sum_{i=1}^d w_i^2$时, 请给出最优解$\hat{\mathbf{w}}_{\textbf{Ridge}}^*$的闭式解表达式;
+
+(3) \textbf{[10pts]} 考虑\href{https://en.wikipedia.org/wiki/LASSO}{LASSO}问题, 即对应于公式\eqref{eq:ls-regular}中$\Omega(\mathbf{w}) = \lVert \mathbf{w}\rVert_1=\sum_{i=1}^d \vert w_i\vert$时, 请给出最优解$\hat{\mathbf{w}}_{\textbf{LASSO}}^*$的闭式解表达式;
+
+(4) \textbf{[10pts]} 考虑$\ell_0$-范数正则化问题, 
+\begin{equation}
+\label{eq:ls-l0}
+\hat{\mathbf{w}}_{\mathbf{\ell_0}}^* = \mathop{\arg\min}_{\mathbf{w}} \frac{1}{2}\lVert \mathbf{y} - \mathbf X \mathbf{w} \rVert_2^2 +\lambda \lVert \mathbf{w}\rVert_0,
+\end{equation}
+其中, $\lVert \mathbf{w}\rVert_0=\sum_{i=1}^d \mathbb{I}[w_i \neq 0]$,即$\lVert \mathbf{w}\rVert_0$表示$\mathbf{w}$中非零项的个数。通常来说, 上述问题是NP-Hard问题, 且是非凸问题, 很难进行有效地优化得到最优解。实际上, 问题(3)中的LASSO可以视为是近些年研究者求解$\ell_0$-范数正则化的凸松弛问题。
+
+但当假设样本特征矩阵$\mathbf{X}$满足列正交性质, 即$\mathbf{X}^\mathrm{T}\mathbf{X} = \mathbf{I}$时, $\ell_0$-范数正则化问题存在闭式解。请给出最优解$\hat{\mathbf{w}}_{\mathbf{\ell_0}}^*$的闭式解表达式, 并简要说明若去除列正交性质假设后, 为什么问题会变得非常困难？
+
+\begin{solution}
+此处用于写解答(中英文均可)\\
+(1)令$E_{\mathbf w} = \frac{1}{2}\lVert \mathbf y - \mathbf X \mathbf w \rVert_2^2 = \frac{1}{2}(\mathbf y - \mathbf X \mathbf w)^T(\mathbf y - \mathbf X \mathbf w)$\\
+则$\frac{\partial E_{\mathbf w}}{\partial w} = \frac{1}{2} 2 \mathbf{X}^T (\mathbf X \mathbf w - \mathbf y) = \mathbf{X}^T (\mathbf X \mathbf w - \mathbf y) = 0$\\
+得 $\mathbf{X}^T\mathbf X \mathbf w = \mathbf{X}^T\mathbf y$\\
+$\because \mathbf{X}^T\mathbf X = \mathbf I$\\
+$\therefore \hat{\mathbf w}^*_{\textbf LS} = (\mathbf{X}^T\mathbf X)^{-1}\mathbf{X}^T\mathbf y = \mathbf{X}^T\mathbf y$\\
+(2)令$E_{\mathbf w} = \frac{1}{2}\lVert \mathbf y - \mathbf X \mathbf w \rVert_2^2 + \lambda \lVert \mathbf w\rVert_2^2= \frac{1}{2}(\mathbf y - \mathbf X \mathbf w)^T(\mathbf y - \mathbf X \mathbf w) + \lambda \mathbf{w}^T\mathbf w$\\
+则$\frac{\partial E_{\mathbf w}}{\partial w} = \frac{1}{2} 2 \mathbf{X}^T (\mathbf X \mathbf w - \mathbf y) + \lambda 2 \mathbf w= \mathbf{X}^T (\mathbf X \mathbf w - \mathbf y) + 2\lambda \mathbf w=0$\\
+得$(\mathbf{X}^T\mathbf X + 2\lambda \mathbf I)\mathbf w = \mathbf{X}^T\mathbf y$\\
+$\because \mathbf{X}^T\mathbf X = \mathbf I$\\
+$\therefore \hat{\mathbf w}^*_{\textbf Ridge} = \frac{1}{2\lambda + 1}\mathbf{X}^T\mathbf y$\\
+(3)根据\href{http://freemind.pluskid.org/machine-learning/sparsity-and-some-basics-of-l1-regularization/}{网上的资料}，对于不光滑的$\lVert \mathbf w \rVert_1$，它的梯度不存在，这时需要考虑次梯度(subgradient)\\
+点$\mathbf x_0$是凸函数$\mathnormal{f}$的一个全局最小值点，当且仅当$0 \in \partial\mathnormal{f}(\mathbf x_0)$。\\
+次梯度的定义为：$$\partial \vert \mathbf w_i\vert =
+\begin{cases}
+1, \qquad \mathbf w_i > 0  \\
+c, \qquad -1\leq c \leq 1, \qquad \mathbf w_i = 0 \\
+-1, \qquad \mathbf w_i < 0
+\end{cases}$$
+令$E_{\mathbf w} = \frac{1}{2}\lVert \mathbf y - \mathbf X \mathbf w \rVert_2^2 + \lambda \lVert \mathbf w\rVert_1= \frac{1}{2}(\mathbf y - \mathbf X \mathbf w)^T(\mathbf y - \mathbf X \mathbf w) + \lambda \sum_{i=1}^d \vert w_i \vert$\\
+设$\hat{\mathbf w}^*$为最优解，若梯度存在，此时$\hat{w}_i^* \neq 0$时，此时次梯度等于梯度。\\
+$\therefore \frac{\partial E_{\mathbf w}}{\partial \mathbf w_i} = \mathbf{X}^T (\mathbf X \mathbf w - \mathbf y)_i + \lambda sign(w_i) = 0$\\
+$\because \mathbf{X}^T\mathbf X = \mathbf I$，且由于极值点处梯度为0\\
+$\therefore \hat{w}_i^* = (\mathbf{X}^T \mathbf y)_i - \lambda sign(\hat{w}_i^*) = \hat{w}_{LS,i}^* - \lambda sign(\hat{w}_i^*)$\\
+若梯度不存在，则此时$\hat{w}_i^* = 0$, 此时$0 \in \partial \mathbf E_{\mathbf w}$\\
+$\therefore \partial \mathbf E_{\mathbf w} \vert_{\hat{w}_i^*} = \hat{w}_i^* - \hat{w}^*_{LS,i} + \lambda c = 0$, 其中，$c=\partial \vert w_i\vert, -1\leq c\leq 1$\\
+$\therefore \hat{w}_{LS,i}^* = \lambda c$\\
+$$\therefore \hat{w}_{LASSO,i}^* = 
+\begin{cases}
+\hat{w}^*_{LS,i}-\lambda sign(\hat{w}^*_{LASSO,i}), \qquad gradient\; exists\\
+0, \qquad gradient\; does\; not\; exist
+\end{cases}$$\\
+(4)令$E_{\mathbf w} = \frac{1}{2}\lVert \mathbf y - \mathbf X \mathbf w \rVert_2^2 + \lambda \lVert \mathbf w\rVert_0= \frac{1}{2}(\mathbf y - \mathbf X \mathbf w)^T(\mathbf y - \mathbf X \mathbf w) + \lambda \sum_{i=1}^d \mathbb{I}[w_i \neq 0]$\\
+$=\frac{1}{2}\mathbf{y}^T\mathbf y - \mathbf{y}^T\mathbf X \mathbf w + \frac{1}{2}\mathbf{w}^T\mathbf w + \lambda \sum_{i=1}^d \mathbb{I}[w_i \neq 0]$\\
+由于$\mathbf{y}^T\mathbf y$为常量，所以，问题转化为求：\\
+$\textbf{min} -\mathbf{y}^T\mathbf X \mathbf w + \frac{1}{2}\sum_{i=1}^{d} w_i^2 + \lambda \sum_{i=1}^d \mathbb{I}[w_i \neq 0]$\\
+又因为$\mathbf{X}^T \mathbf y = \hat{\mathbf w}^*_{\textbf LS}$\\
+$\therefore$原问题转化为：\\
+$\textbf{min} \quad \mathbf{\mathnormal{f}}=\sum_{i=1}^d -\hat{w}^*_{i,LS} w_i + \frac{1}{2}\sum_{i=1}^d w_i^2 + \lambda \sum_{i=1}^d \mathbb{I}[w_i \neq 0]$\\
+当$w_i \neq 0$时，$\frac{\partial \mathbf{\mathnormal{f}}}{\partial w_i} = -\hat{w}^*_{i,LS} + w_i = 0$\\
+$\therefore \hat{w}_{i,\ell_0}^* = \hat{w}^*_{i,LS}$\\
+当$w_i=0$时，$\hat{w}_{i,\ell_0}^* = 0$\\
+去掉正交性条件问题就会复杂主要是因为$\hat{\mathbf w}^*_{\textbf LS} = (\mathbf{X}^T\mathbf X)^{-1}\mathbf{X}^T\mathbf y = \mathbf{X}^T\mathbf y$不成立了，使得问题无法简化成上述形式。
+\end{solution}
+
+
+
+\end{document}
